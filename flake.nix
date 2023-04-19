@@ -53,7 +53,7 @@
           packages.default = my-crate;
           apps.default = {
             type = "app";
-            program = my-crate + "/bin/" + my-crate.name;
+            program = my-crate + "/bin/" + my-crate.pname;
           };
           devShells.default = pkgs.mkShell {
             name = "my-crate";
