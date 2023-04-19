@@ -1,6 +1,12 @@
 use serde::Deserialize;
 use std::fs;
-
+use std::fs::File;
+use std::fs::{DirEntry};
+use std::path::Path;
+use image::codecs::gif::GifEncoder;
+use image::codecs::gif::Repeat;
+use image::{GenericImage, Frame};
+use image::io::Reader as ImageReader;
 
 #[derive(Deserialize,Debug)]
 struct GameFrameConfig {
@@ -27,14 +33,7 @@ struct Translate {
     panoff: bool
 }
 
-fn main() {
-    let config_bytes = fs::read("config.ini").unwrap();
-    let config_string = String::from_utf8_lossy(config_bytes.as_ref());
-    let config: GameFrameConfig = toml::from_str( config_string.as_ref() ).unwrap();
-    println!("{:?}", config);
-
-    // open dir, find bmp images, sort.
-
+fn get_bmps(path: &Path) -> Vec<DirEntry> {
     let mut images = vec![];
 
     let mut paths: Vec<_> = fs::read_dir("example").unwrap()
@@ -49,11 +48,59 @@ fn main() {
             }
         }
     }
-
     images.sort_by(|a,b| alphanumeric_sort::compare_path(a.path(),b.path()));
+    return images
+}
+fn main() {
+    let config_bytes = fs::read("config.ini").unwrap();
+    let config_string = String::from_utf8_lossy(config_bytes.as_ref());
+    let config: GameFrameConfig = toml::from_str( config_string.as_ref() ).unwrap();
+    println!("{:?}", config);
 
-    for b in images {
-        println!("{:?}", b.file_name());
+    //let target_image = GenericImage::new();
+    //
+
+    let subj = "example";
+    let bmp_list = get_bmps(Path::new(subj));
+
+    let mut gif_buff = File::create(format!("{}.gif", subj)).unwrap();
+    let mut gif = GifEncoder::new(gif_buff);
+
+
+    if bmp_list.len()  > 1 {
+        println!("multiple images");
+        for b in &bmp_list {
+            //println!("{:?}", b.file_name());
+            //let img = ImageReader::open(b.path()).expect("couldn't open _ file").decode();
+            let frame = Frame::from_parts( ImageReader::open( b.path())
+                .unwrap()
+                .decode()
+                .unwrap()
+                .into_rgba8(),0,0, image::Delay::from_numer_denom_ms(config.animation.delay_ms,1));
+            gif.encode_frame(frame);
+        }
+
+
+
+
+    } else {
+        println!("single");
     }
+
+    let  first_image= &bmp_list.first();
+
+
+
+
+
+    /*
+    let mut file_out = File::open(format!("{}.gif", subj)).unwrap();
+    let mut gif = GifEncoder::new(file_out);
+    if config.animation.looping {
+        gif.set_repeat(Repeat::Infinite);
+    }
+    */
+
+
 
 }

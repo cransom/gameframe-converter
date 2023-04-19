@@ -41,7 +41,12 @@
 
             # Additional environment variables can be set directly
             # MY_CUSTOM_VAR = "some value";
+
           };
+          crun = pkgs.writeShellApplication { name = "crun";  runtimeInputs = [ pkgs.entr ]; text =  ''
+            find src/ -iname \*.rs | entr -r cargo run
+          '';
+        };
         in rec
         {
           # Per-system attributes can be defined here. The self' and inputs'
@@ -58,12 +63,14 @@
           devShells.default = pkgs.mkShell {
             name = "my-crate";
             #inputsFrom = my-crate.buildInputs;
-            inputsFrom = builtins.attrValues checks;
+            inputsFrom = builtins.attrValues checks ++ [
+            ];
 
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
             nativeBuildInputs = with pkgs; [
               cargo
               rustc
+              crun
             ];
           };
         };
