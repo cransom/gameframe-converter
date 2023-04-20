@@ -586,7 +586,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pixelpi-converter"
+name = "gameframe-converter"
 version = "0.1.0"
 dependencies = [
  "alphanumeric-sort",

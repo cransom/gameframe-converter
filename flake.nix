@@ -29,7 +29,7 @@
       perSystem = { config, self', inputs', pkgs, system, ... }:
         let
           craneLib = crane.lib.${system};
-          my-crate = craneLib.buildPackage {
+          gameframe-converter = craneLib.buildPackage {
             src = craneLib.cleanCargoSource (craneLib.path ./.);
 
             buildInputs = [
@@ -59,15 +59,15 @@
           # system.
 
           # Equivalent to  inputs'.nixpkgs.legacyPackages.hello;
-          checks = { inherit my-crate; };
-          packages.default = my-crate;
+          checks = { inherit gameframe-converter; };
+          packages.default = gameframe-converter;
           apps.default = {
             type = "app";
-            program = my-crate + "/bin/" + my-crate.pname;
+            program = gameframe-converter + "/bin/" + gameframe-converter.pname;
           };
           devShells.default = pkgs.mkShell {
-            name = "my-crate";
-            #inputsFrom = my-crate.buildInputs;
+            name = "gameframe-converter";
+            #inputsFrom = gameframe-converter.buildInputs;
             inputsFrom = builtins.attrValues checks ++ [
             ];
 
@@ -77,6 +77,7 @@
               # cargo rustc rustfmt
               rustup
               crun
+              coreutils
             ];
           };
         };
