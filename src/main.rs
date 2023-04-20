@@ -1,7 +1,7 @@
 use image::codecs::gif::{GifEncoder, Repeat};
 //use image::codecs::gif::Repeat;
 use image::io::Reader as ImageReader;
-use image::{Frame,  GenericImageView};
+use image::{Frame,  GenericImageView, AnimationDecoder};
 use serde::Deserialize;
 use std::fs;
 use std::fs::DirEntry;
@@ -10,27 +10,55 @@ use std::path::Path;
 
 #[derive(Deserialize, Debug)]
 struct GameFrameConfig {
+    #[serde(default)]
     animation: Animation,
+    #[serde(default)]
     translate: Translate,
+}
+impl Default for GameFrameConfig {
+    fn default() -> GameFrameConfig {
+        GameFrameConfig {
+            animation: Animation{ ..Default::default() },
+            translate: Translate{ ..Default::default() },
+        }
+    }
 }
 
 #[derive(Deserialize, Debug)]
 struct Animation {
-    #[serde(rename = "hold")]
+    #[serde(rename = "hold", default)]
     delay_ms: u32,
-    #[serde(rename = "loop")]
+    #[serde(rename = "loop", default)]
     looping: bool,
+}
+impl Default for Animation {
+    fn default() -> Animation {
+        Animation {
+            delay_ms: 50,
+            looping: true,
+        }
+    }
 }
 
 #[derive(Deserialize, Debug)]
 struct Translate {
-    #[serde(rename = "moveX")]
+    #[serde(rename = "moveX", default)]
     move_x: u32,
-    #[serde(rename = "moveY")]
+    #[serde(rename = "moveY", default)]
     move_y: u32,
-    #[serde(rename = "loop")]
+    #[serde(rename = "loop", default)]
     looping: bool,
     panoff: bool,
+}
+impl Default for Translate {
+    fn default() -> Translate {
+        Translate {
+            move_x: 0,
+            move_y: 0,
+            looping: true,
+            panoff: true,
+        }
+    }
 }
 
 fn main() {
@@ -41,22 +69,19 @@ fn main() {
     //let subj = "example";
     let subj = std::env::args().nth(1).expect("no path given");
     println!("{}", subj);
-    let bmp_list = get_bmps(Path::new(subj.as_str()));
     let config_loc  = format!("{}/{}", subj, "config.ini");
-    let config_bytes = fs::read(Path::new( config_loc.as_str())).unwrap();
+    let config_bytes = fs::read(Path::new( config_loc.as_str()));
     let config_string = String::from_utf8_lossy(config_bytes.as_ref());
     let config: GameFrameConfig = toml::from_str(config_string.as_ref()).unwrap();
     println!("{}, {:?}", subj, config);
 
+    let bmp_list = get_bmps(Path::new(subj.as_str()));
     let gif_buff = File::create(format!("{}.gif", subj)).unwrap();
     let mut gif = GifEncoder::new(gif_buff);
     gif.set_repeat(Repeat::Infinite).unwrap();
 
     if bmp_list.len() > 1 {
-        println!("multiple images");
         for b in &bmp_list {
-            //println!("{:?}", b.file_name());
-            //let img = ImageReader::open(b.path()).expect("couldn't open _ file").decode();
             let frame = Frame::from_parts(
                 ImageReader::open(b.path())
                     .unwrap()
@@ -70,7 +95,6 @@ fn main() {
             gif.encode_frame(frame).unwrap();
         }
     } else {
-        println!("single");
 
         let image = ImageReader::open(bmp_list.first().unwrap().path())
             .unwrap()
