@@ -2,16 +2,16 @@
   description = "Description for the project";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane = {
       url = "github:ipetkov/crane";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
   };
 
-  outputs = inputs@{ flake-parts, crane, ... }:
+
+  outputs = inputs@{ flake-parts, crane,  ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         # To import a flake module
@@ -46,6 +46,7 @@
           crun = pkgs.writeShellApplication { name = "crun";  runtimeInputs = [ pkgs.entr ]; text =  ''
             find src/ -iname \*.rs | entr -r cargo run
           '';
+
         };
         in rec
         {
@@ -71,6 +72,7 @@
               cargo
               rustc
               crun
+              rustfmt
             ];
           };
         };
