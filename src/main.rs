@@ -69,8 +69,7 @@ impl Default for Translate {
 }
 
 fn main() {
-    let subj = std::env::args().nth(1).expect("no path given");
-    println!("{}", subj);
+    let subj = std::env::args().nth(1).expect("Usage: gameframe-converter <path>");
     let config_loc = format!("{}/{}", subj, "config.ini");
     let config_path = Path::new(config_loc.as_str());
     let mut config = if config_path.exists() {
@@ -141,6 +140,7 @@ fn main() {
     }
 }
 
+
 fn get_bmps(path: &Path) -> Vec<DirEntry> {
     let mut images = vec![];
     let dir_list = fs::read_dir(path).unwrap();
@@ -157,4 +157,18 @@ fn get_bmps(path: &Path) -> Vec<DirEntry> {
     }
     images.sort_by(|a, b| alphanumeric_sort::compare_path(a.path(), b.path()));
     images
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn all_the_bitmaps() {
+        assert_eq!(get_bmps(Path::new("tests/ordered")).len(), 6);
+    }
+    #[test]
+    fn ordered_bitmaps() {
+        assert_eq!(get_bmps(Path::new("tests/ordered")).first().unwrap().path(), Path::new("tests/ordered/0.bmp"));
+        assert_eq!(get_bmps(Path::new("tests/ordered")).last().unwrap().path(), Path::new("tests/ordered/10.bmp"));
+    }
 }
