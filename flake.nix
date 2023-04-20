@@ -11,7 +11,7 @@
   };
 
 
-  outputs = inputs@{ flake-parts, crane,  ... }:
+  outputs = inputs@{ flake-parts, crane, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         # To import a flake module
@@ -43,12 +43,16 @@
             # MY_CUSTOM_VAR = "some value";
 
           };
-          crun = pkgs.writeShellApplication { name = "crun";  runtimeInputs = [ pkgs.entr ]; text =  ''
-            find src/ -iname \*.rs | entr -r cargo run
-          '';
+          crun = pkgs.writeShellApplication {
+            name = "crun";
+            runtimeInputs = [ pkgs.entr ];
+            text = ''
+              find src/ -iname \*.rs | entr -r cargo run -- "$*"
+            '';
 
-        };
-        in rec
+          };
+        in
+        rec
         {
           # Per-system attributes can be defined here. The self' and inputs'
           # module parameters provide easy access to attributes of the same
@@ -69,10 +73,10 @@
 
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
             nativeBuildInputs = with pkgs; [
-              cargo
-              rustc
+              # macos rustfmt is broken and i'm sad about it.
+              # cargo rustc rustfmt
+              rustup
               crun
-              rustfmt
             ];
           };
         };
